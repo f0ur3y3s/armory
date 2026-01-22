@@ -41,12 +41,33 @@ Automated development environment setup script for Debian-based Linux distributi
 - Debian-based Linux distribution (Debian 12 "Bookworm" or Ubuntu)
 - Root/sudo access
 - Active internet connection
+- **Important**: Review the script contents before execution - it modifies system configuration and installs packages
 
 ## Installation
 
+### Quick Install (wget)
+
+**⚠️ Security Warning**: Always review scripts before running them with sudo, especially when downloaded from the internet. The script makes system-wide changes and requires root privileges.
+
+Download and inspect the script first:
+```bash
+wget https://raw.githubusercontent.com/f0ur3y3s/armory/main/armory.sh
+cat armory.sh  # Review the script contents
+chmod +x armory.sh
+sudo ./armory.sh
+```
+
+Or download and run in one command (only if you trust the source):
+```bash
+wget -O - https://raw.githubusercontent.com/f0ur3y3s/armory/main/armory.sh | sudo bash
+```
+**Warning**: The one-liner above executes the script without review. Use at your own risk.
+
+### Git Clone Method
+
 1. Clone this repository:
 ```bash
-git clone https://github.com/yourusername/armory.git
+git clone https://github.com/f0ur3y3s/armory.git
 cd armory
 ```
 
