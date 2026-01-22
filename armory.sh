@@ -23,6 +23,8 @@ PACKAGES=(
     "socat" "ncat" "net-tools" "sshpass" "bind9-dnsutils"
     # Terminal utilities
     "cowsay" "fortune-mod"
+    # Smart cat function prerequisites
+    "vim-common" "jq" "bat"
 )
 # Note: neovim, btop, eza, glow, and zsh-autosuggestions need special handling
 
@@ -285,6 +287,79 @@ alias clang='clang-18'
 alias clang++='clang++-18'
 EOF"
         echo "Added custom aliases to .zshrc."
+    fi
+
+    # Add smart cat function if it doesn't exist
+    if ! grep -q "# Smart cat function" "$ZSHRC_FILE"; then
+        sudo -u "$ACTUAL_USER" bash -c "cat >> '$ZSHRC_FILE' << 'EOF'
+
+# Smart cat function - switches tools based on file type
+cat() {
+    for file in \"\$@\"; do
+        # Skip if it's a flag/option
+        if [[ \"\$file\" == -* ]]; then
+            command cat \"\$@\"
+            return
+        fi
+
+        # Check if file exists
+        if [[ ! -f \"\$file\" ]]; then
+            command cat \"\$@\"
+            return
+        fi
+
+        # Detect file type
+        local mime_type=\$(file --mime-type -b \"\$file\")
+        local extension=\"\${file##*.}\"
+
+        # Route to appropriate tool
+        case \"\$mime_type\" in
+            application/octet-stream|application/x-executable|application/x-sharedlib)
+                xxd \"\$file\"
+                ;;
+            */x-*|application/gzip|application/zip)
+                xxd \"\$file\"
+                ;;
+            text/markdown)
+                if command -v glow &> /dev/null; then
+                    glow \"\$file\"
+                else
+                    command cat \"\$file\"
+                fi
+                ;;
+            application/json)
+                if command -v jq &> /dev/null; then
+                    jq '.' \"\$file\"
+                else
+                    command cat \"\$file\"
+                fi
+                ;;
+            text/*)
+                if command -v bat &> /dev/null; then
+                    bat \"\$file\"
+                else
+                    command cat \"\$file\"
+                fi
+                ;;
+            *)
+                # Check by extension as fallback
+                case \"\$extension\" in
+                    md|markdown)
+                        glow \"\$file\" 2>/dev/null || command cat \"\$file\"
+                        ;;
+                    json)
+                        jq '.' \"\$file\" 2>/dev/null || command cat \"\$file\"
+                        ;;
+                    *)
+                        command cat \"\$file\"
+                        ;;
+                esac
+                ;;
+        esac
+    done
+}
+EOF"
+        echo "Added smart cat function to .zshrc."
     fi
 fi
 
