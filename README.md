@@ -59,7 +59,7 @@ sudo ./armory.sh
 
 Or download and run in one command (only if you trust the source):
 ```bash
-wget -O - https://raw.githubusercontent.com/f0ur3y3s/armory/main/armory.sh | sudo bash
+wget -O - hhttps://raw.githubusercontent.com/f0ur3y3s/armory/refs/heads/main/armory.sh | sudo bash
 ```
 **Warning**: The one-liner above executes the script without review. Use at your own risk.
 
