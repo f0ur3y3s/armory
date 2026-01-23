@@ -78,24 +78,38 @@ done
 if ! command -v nvim &>/dev/null || [[ $(nvim --version | head -1 | grep -o '0\.[0-9]\+' | head -1) < "0.11" ]]; then
     echo "Installing latest Neovim from GitHub..."
     NVIM_VERSION=$(curl -s https://api.github.com/repos/neovim/neovim/releases/latest | grep '"tag_name"' | sed -E 's/.*"v([^"]+)".*/\1/')
-    NVIM_URL="https://github.com/neovim/neovim/releases/download/v${NVIM_VERSION}/nvim-linux64.tar.gz"
 
-    cd /tmp
-    curl -LO "$NVIM_URL"
-    tar xzf nvim-linux64.tar.gz
+    if [[ -z "$NVIM_VERSION" ]]; then
+        echo "Failed to fetch Neovim version from GitHub API. Skipping Neovim installation."
+    else
+        NVIM_URL="https://github.com/neovim/neovim/releases/download/v${NVIM_VERSION}/nvim-linux64.tar.gz"
 
-    # Remove old neovim if it exists
-    rm -rf /usr/local/nvim-linux64
+        cd /tmp
+        echo "Downloading Neovim v${NVIM_VERSION}..."
+        if curl -fL "$NVIM_URL" -o nvim-linux64.tar.gz; then
+            # Verify it's actually a gzip file
+            if file nvim-linux64.tar.gz | grep -q "gzip compressed data"; then
+                tar xzf nvim-linux64.tar.gz
 
-    # Install to /usr/local
-    mv nvim-linux64 /usr/local/
-    ln -sf /usr/local/nvim-linux64/bin/nvim /usr/local/bin/nvim
+                # Remove old neovim if it exists
+                rm -rf /usr/local/nvim-linux64
 
-    # Cleanup
-    rm -f nvim-linux64.tar.gz
-    cd /
+                # Install to /usr/local
+                mv nvim-linux64 /usr/local/
+                ln -sf /usr/local/nvim-linux64/bin/nvim /usr/local/bin/nvim
 
-    echo "Installed Neovim v${NVIM_VERSION}"
+                echo "Installed Neovim v${NVIM_VERSION}"
+            else
+                echo "Downloaded file is not a valid gzip archive. Skipping Neovim installation."
+            fi
+        else
+            echo "Failed to download Neovim. Skipping installation."
+        fi
+
+        # Cleanup
+        rm -f nvim-linux64.tar.gz
+        cd /
+    fi
 else
     echo "Neovim is already installed and up to date. Skipping."
 fi
