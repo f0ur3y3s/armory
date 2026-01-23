@@ -124,7 +124,7 @@ else
 fi
 
 # Get custom zsh theme
-FOURSIGHT_URL="https://raw.githubusercontent.com/f0ur3y3s/dotfiles/refs/heads/main/omzsh/foursight.zsh-theme"
+FOURSIGHT_URL="https://raw.githubusercontent.com/f0ur3y3s/dotfiles/refs/heads/main/omzsh/.oh-my-zsh/custom/themes/foursight.zsh-theme"
 TARGET_DIR="$ACTUAL_HOME/.oh-my-zsh/custom/themes"
 FOURSIGHT_FILENAME=$(basename "$FOURSIGHT_URL")
 
