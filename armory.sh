@@ -6,6 +6,16 @@ if [[ $EUID -ne 0 ]]; then
     exit 1
 fi
 
+# Color codes
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+MAGENTA='\033[0;35m'
+BOLD='\033[1m'
+NC='\033[0m' # No Color
+
 # Create log file
 LOG_FILE="/tmp/armory-install.log"
 exec 3>&1 4>&2  # Save stdout and stderr
@@ -20,10 +30,10 @@ show_progress() {
     local filled=$((width * current / total))
     local empty=$((width - filled))
 
-    printf "\r["
+    printf "\r${CYAN}["
     printf "%${filled}s" | tr ' ' '='
     printf "%${empty}s" | tr ' ' ' '
-    printf "] %3d%% (%d/%d)" "$percentage" "$current" "$total"
+    printf "] ${BOLD}%3d%%${NC} ${BLUE}(%d/%d)${NC}" "$percentage" "$current" "$total"
 }
 
 # Logging wrapper function
@@ -63,28 +73,28 @@ else
 fi
 
 echo ""
-echo "============================================"
-echo "   Armory - Development Environment Setup"
-echo "============================================"
+echo -e "${CYAN}${BOLD}============================================${NC}"
+echo -e "${CYAN}${BOLD}   Armory - Development Environment Setup${NC}"
+echo -e "${CYAN}${BOLD}============================================${NC}"
 echo ""
 
 # Fix CD-ROM repository issue first
 if grep -q "cdrom:" /etc/apt/sources.list 2>/dev/null; then
-    echo "Fixing repository configuration..."
+    echo -e "${YELLOW}Fixing repository configuration...${NC}"
     sed -i 's/^deb cdrom:/#deb cdrom:/' /etc/apt/sources.list
 fi
 
-echo -n "Updating package list..."
+echo -ne "${BLUE}Updating package list...${NC}"
 log_output $UPDATE_CMD
-echo " Done"
+echo -e " ${GREEN}✓ Done${NC}"
 
 # Handle Debian-specific package installations
 # Add backports for newer packages
 if ! grep -q "bookworm-backports" /etc/apt/sources.list /etc/apt/sources.list.d/* 2>/dev/null; then
-    echo -n "Adding Debian backports repository..."
+    echo -ne "${BLUE}Adding Debian backports repository...${NC}"
     echo "deb http://deb.debian.org/debian bookworm-backports main" >> /etc/apt/sources.list.d/backports.list
     log_output $UPDATE_CMD
-    echo " Done"
+    echo -e " ${GREEN}✓ Done${NC}"
 fi
 
 # For Python 3.13 on Debian, we'll compile from source or use alternative methods
@@ -96,7 +106,7 @@ fi
 
 # Install packages
 echo ""
-echo "Installing system packages..."
+echo -e "${MAGENTA}${BOLD}Installing system packages...${NC}"
 TOTAL_PACKAGES=${#PACKAGES[@]}
 CURRENT=0
 
@@ -108,15 +118,15 @@ for package in "${PACKAGES[@]}"; do
     fi
 done
 echo ""  # New line after progress bar
-echo "System packages installed"
+echo -e "${GREEN}✓ System packages installed${NC}"
 
 # Install latest Neovim from GitHub
 if ! command -v nvim &>/dev/null || [[ $(nvim --version 2>/dev/null | head -1 | grep -o '0\.[0-9]\+' | head -1) < "0.11" ]]; then
-    echo -n "Installing Neovim..."
+    echo -ne "${BLUE}Installing Neovim...${NC}"
     NVIM_VERSION=$(curl -s https://api.github.com/repos/neovim/neovim/releases/latest | grep '"tag_name"' | sed -E 's/.*"v([^"]+)".*/\1/')
 
     if [[ -z "$NVIM_VERSION" ]]; then
-        echo " Failed (couldn't fetch version)"
+        echo -e " ${RED}✗ Failed (couldn't fetch version)${NC}"
     else
         NVIM_URL="https://github.com/neovim/neovim/releases/download/v${NVIM_VERSION}/nvim-linux-x86_64.tar.gz"
 
@@ -127,19 +137,19 @@ if ! command -v nvim &>/dev/null || [[ $(nvim --version 2>/dev/null | head -1 | 
                 rm -rf /usr/local/nvim-linux-x86_64
                 mv nvim-linux-x86_64 /usr/local/
                 ln -sf /usr/local/nvim-linux-x86_64/bin/nvim /usr/local/bin/nvim
-                echo " Done (v${NVIM_VERSION})"
+                echo -e " ${GREEN}✓ Done (v${NVIM_VERSION})${NC}"
             else
-                echo " Failed (invalid download)"
+                echo -e " ${RED}✗ Failed (invalid download)${NC}"
             fi
         else
-            echo " Failed (download error)"
+            echo -e " ${RED}✗ Failed (download error)${NC}"
         fi
 
         rm -f nvim-linux-x86_64.tar.gz
         cd /
     fi
 else
-    echo "Neovim already installed"
+    echo -e "${GREEN}✓ Neovim already installed${NC}"
 fi
 
 # Get the actual user (not root) for user-specific operations
@@ -147,20 +157,20 @@ ACTUAL_USER=${SUDO_USER:-$USER}
 ACTUAL_HOME=$(eval echo ~$ACTUAL_USER)
 
 echo ""
-echo "Configuring environment for: $ACTUAL_USER"
+echo -e "${CYAN}${BOLD}Configuring environment for: ${MAGENTA}$ACTUAL_USER${NC}"
 
 # Change shell to zsh for the actual user
 if [[ $(getent passwd "$ACTUAL_USER" | cut -d: -f7) != "$(which zsh)" ]]; then
-    echo -n "Setting default shell to zsh..."
+    echo -ne "${BLUE}Setting default shell to zsh...${NC}"
     chsh -s "$(which zsh)" "$ACTUAL_USER" 2>> "$LOG_FILE"
-    echo " Done"
+    echo -e " ${GREEN}✓ Done${NC}"
 fi
 
 # Install oh-my-zsh as the actual user
 if [[ ! -d "$ACTUAL_HOME/.oh-my-zsh" ]]; then
-    echo -n "Installing oh-my-zsh..."
+    echo -ne "${BLUE}Installing oh-my-zsh...${NC}"
     sudo -u "$ACTUAL_USER" sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended >> "$LOG_FILE" 2>&1
-    echo " Done"
+    echo -e " ${GREEN}✓ Done${NC}"
 fi
 
 # Get custom zsh theme
@@ -168,25 +178,25 @@ FOURSIGHT_URL="https://raw.githubusercontent.com/f0ur3y3s/dotfiles/refs/heads/ma
 TARGET_DIR="$ACTUAL_HOME/.oh-my-zsh/custom/themes"
 FOURSIGHT_FILENAME=$(basename "$FOURSIGHT_URL")
 
-echo -n "Installing custom zsh theme..."
+echo -ne "${BLUE}Installing custom zsh theme...${NC}"
 sudo -u "$ACTUAL_USER" mkdir -p "$TARGET_DIR"
 sudo -u "$ACTUAL_USER" curl -so "$TARGET_DIR/$FOURSIGHT_FILENAME" "$FOURSIGHT_URL"
 
 if [[ -f "$ACTUAL_HOME/.zshrc" ]]; then
     sudo -u "$ACTUAL_USER" sed -i 's/ZSH_THEME=".*"/ZSH_THEME="foursight"/' "$ACTUAL_HOME/.zshrc"
 fi
-echo " Done"
+echo -e " ${GREEN}✓ Done${NC}"
 
 # Install zsh-autosuggestions
 ZSH_AUTOSUGGESTIONS_DIR="$ACTUAL_HOME/.oh-my-zsh/custom/plugins/zsh-autosuggestions"
 if [[ ! -d "$ZSH_AUTOSUGGESTIONS_DIR" ]]; then
-    echo -n "Installing zsh-autosuggestions..."
+    echo -ne "${BLUE}Installing zsh-autosuggestions...${NC}"
     sudo -u "$ACTUAL_USER" git clone https://github.com/zsh-users/zsh-autosuggestions "$ZSH_AUTOSUGGESTIONS_DIR" >> "$LOG_FILE" 2>&1
 
     if [[ -f "$ACTUAL_HOME/.zshrc" ]] && ! grep -q "zsh-autosuggestions" "$ACTUAL_HOME/.zshrc"; then
         sudo -u "$ACTUAL_USER" sed -i 's/^plugins=(\(.*\))/plugins=(\1 zsh-autosuggestions)/' "$ACTUAL_HOME/.zshrc"
     fi
-    echo " Done"
+    echo -e " ${GREEN}✓ Done${NC}"
 fi
 
 # Setup Neovim config
@@ -194,65 +204,65 @@ NVIM_CONFIG_DIR="$ACTUAL_HOME/.config/nvim"
 NVIM_REPO="https://github.com/f0ur3y3s/nvim.git"
 
 if [[ ! -d "$NVIM_CONFIG_DIR" ]]; then
-    echo -n "Setting up Neovim configuration..."
+    echo -ne "${BLUE}Setting up Neovim configuration...${NC}"
     sudo -u "$ACTUAL_USER" mkdir -p "$ACTUAL_HOME/.config"
     sudo -u "$ACTUAL_USER" git clone "$NVIM_REPO" "$NVIM_CONFIG_DIR" >> "$LOG_FILE" 2>&1
-    echo " Done"
+    echo -e " ${GREEN}✓ Done${NC}"
 fi
 
 # Download Google's pylintrc
 if [[ ! -f "$ACTUAL_HOME/.pylintrc" ]]; then
-    echo -n "Downloading pylintrc..."
+    echo -ne "${BLUE}Downloading pylintrc...${NC}"
     sudo -u "$ACTUAL_USER" curl -so "$ACTUAL_HOME/.pylintrc" "https://google.github.io/styleguide/pylintrc"
-    echo " Done"
+    echo -e " ${GREEN}✓ Done${NC}"
 fi
 
 # Download custom .clang-format
 if [[ ! -f "$ACTUAL_HOME/.clang-format" ]]; then
-    echo -n "Downloading .clang-format..."
+    echo -ne "${BLUE}Downloading .clang-format...${NC}"
     sudo -u "$ACTUAL_USER" curl -so "$ACTUAL_HOME/.clang-format" "https://raw.githubusercontent.com/f0ur3y3s/clang-barrc/main/.clang-format"
-    echo " Done"
+    echo -e " ${GREEN}✓ Done${NC}"
 fi
 
 # Install Node.js (often needed for Neovim plugins)
 if ! command -v node &>/dev/null; then
-    echo -n "Installing Node.js..."
+    echo -ne "${BLUE}Installing Node.js...${NC}"
     curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - >> "$LOG_FILE" 2>&1
     log_output $INSTALL_CMD nodejs
-    echo " Done"
+    echo -e " ${GREEN}✓ Done${NC}"
 fi
 
 # Install Rust (useful for various tools)
 if ! command -v rustc &>/dev/null; then
-    echo -n "Installing Rust..."
+    echo -ne "${BLUE}Installing Rust...${NC}"
     sudo -u "$ACTUAL_USER" curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sudo -u "$ACTUAL_USER" sh -s -- -y >> "$LOG_FILE" 2>&1
     export PATH="$ACTUAL_HOME/.cargo/bin:$PATH"
-    echo " Done"
+    echo -e " ${GREEN}✓ Done${NC}"
 fi
 
 # Setup Docker group for user
 if command -v docker &>/dev/null; then
     if ! groups "$ACTUAL_USER" | grep -q docker; then
-        echo -n "Adding $ACTUAL_USER to docker group..."
+        echo -ne "${BLUE}Adding $ACTUAL_USER to docker group...${NC}"
         usermod -aG docker "$ACTUAL_USER"
-        echo " Done"
+        echo -e " ${GREEN}✓ Done${NC}"
     fi
 
     # Install Docker Compose v2 plugin
     if ! docker compose version &>/dev/null; then
-        echo -n "Installing Docker Compose v2..."
+        echo -ne "${BLUE}Installing Docker Compose v2...${NC}"
         DOCKER_CONFIG=${DOCKER_CONFIG:-/usr/local/lib/docker}
         mkdir -p $DOCKER_CONFIG/cli-plugins
         COMPOSE_VERSION=$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep '"tag_name"' | sed -E 's/.*"v([^"]+)".*/\1/')
         curl -SL "https://github.com/docker/compose/releases/download/v${COMPOSE_VERSION}/docker-compose-linux-x86_64" -o $DOCKER_CONFIG/cli-plugins/docker-compose 2>> "$LOG_FILE"
         chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
-        echo " Done (v${COMPOSE_VERSION})"
+        echo -e " ${GREEN}✓ Done (v${COMPOSE_VERSION})${NC}"
     fi
 fi
 
 # Install btop (system monitor)
 if ! command -v btop &>/dev/null; then
-    echo -n "Installing btop..."
+    echo -ne "${BLUE}Installing btop...${NC}"
     # Try from backports first, fallback to manual installation
     if ! log_output $INSTALL_CMD -t bookworm-backports btop; then
         BTOP_URL=$(curl -s https://api.github.com/repos/aristocratos/btop/releases/latest | grep -o 'https://.*btop.*linux.*x86_64.*tbz' | head -1)
@@ -266,12 +276,12 @@ if ! command -v btop &>/dev/null; then
             rm -rf /tmp/btop*
         fi
     fi
-    echo " Done"
+    echo -e " ${GREEN}✓ Done${NC}"
 fi
 
 # Install glow (markdown viewer)
 if ! command -v glow &>/dev/null; then
-    echo -n "Installing glow..."
+    echo -ne "${BLUE}Installing glow...${NC}"
     GLOW_URL=$(curl -s https://api.github.com/repos/charmbracelet/glow/releases/latest | grep -o 'https://.*glow.*linux.*x86_64.*tar\.gz' | grep -v 'sbom' | head -1)
     if [[ -n "$GLOW_URL" ]]; then
         cd /tmp
@@ -282,12 +292,12 @@ if ! command -v glow &>/dev/null; then
         rm -f glow.tar.gz glow LICENSE README.md completions
         cd /
     fi
-    echo " Done"
+    echo -e " ${GREEN}✓ Done${NC}"
 fi
 
 # Setup clang alternatives to use clang-18 as default
 if command -v clang-18 &>/dev/null; then
-    echo -n "Setting clang-18 as default..."
+    echo -ne "${BLUE}Setting clang-18 as default...${NC}"
     update-alternatives --install /usr/bin/clang clang /usr/bin/clang-18 100 \
         --slave /usr/bin/clang++ clang++ /usr/bin/clang++-18 \
         --slave /usr/bin/clangd clangd /usr/bin/clangd-18 \
@@ -295,7 +305,7 @@ if command -v clang-18 &>/dev/null; then
         --slave /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-18 \
         --slave /usr/bin/lldb lldb /usr/bin/lldb-18 \
         --slave /usr/bin/lld lld /usr/bin/lld-18 >> "$LOG_FILE" 2>&1 || true
-    echo " Done"
+    echo -e " ${GREEN}✓ Done${NC}"
 fi
 
 # Create some useful aliases in .zshrc if they don't exist
@@ -303,7 +313,7 @@ ZSHRC_FILE="$ACTUAL_HOME/.zshrc"
 if [[ -f "$ZSHRC_FILE" ]]; then
     # Add aliases section if it doesn't exist
     if ! grep -q "# Custom aliases" "$ZSHRC_FILE"; then
-        echo -n "Adding shell aliases and functions..."
+        echo -ne "${BLUE}Adding shell aliases and functions...${NC}"
         sudo -u "$ACTUAL_USER" bash -c "cat >> '$ZSHRC_FILE' << 'EOF'
 
 # Custom aliases
@@ -386,19 +396,19 @@ cat() {
     done
 }
 EOF"
-        echo " Done"
+        echo -e " ${GREEN}✓ Done${NC}"
     fi
 fi
 
 echo ""
-echo "============================================"
-echo "   Installation Complete!"
-echo "============================================"
+echo -e "${CYAN}${BOLD}============================================${NC}"
+echo -e "${GREEN}${BOLD}   Installation Complete!${NC}"
+echo -e "${CYAN}${BOLD}============================================${NC}"
 echo ""
-echo "Next steps:"
-echo "  1. Log out and log back in for changes to take effect"
-echo "  2. Run 'zsh' to start using your new shell"
-echo "  3. Open Neovim to trigger plugin installation"
+echo -e "${YELLOW}Next steps:${NC}"
+echo -e "  ${BLUE}1.${NC} Log out and log back in for changes to take effect"
+echo -e "  ${BLUE}2.${NC} Run ${CYAN}'zsh'${NC} to start using your new shell"
+echo -e "  ${BLUE}3.${NC} Open Neovim to trigger plugin installation"
 echo ""
-echo "Installation log: $LOG_FILE"
+echo -e "${MAGENTA}Installation log:${NC} $LOG_FILE"
 echo ""
