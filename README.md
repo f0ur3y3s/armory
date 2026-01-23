@@ -7,7 +7,7 @@ Automated development environment setup script for Debian-based Linux distributi
 ### Core Development Tools
 - **LLVM/Clang Toolchain**: clang-18, clangd, clang-format, clang-tidy, lld, lldb
 - **Build Essentials**: gcc, g++, make, autoconf, automake, libtool, pkg-config
-- **Debugging & Analysis**: gdb, valgrind, cppcheck, cpplint
+- **Debugging & Analysis**: gdb (with GEF), valgrind, cppcheck, cpplint
 - **Version Control**: git, git-lfs
 
 ### Modern CLI Tools
@@ -34,6 +34,7 @@ Automated development environment setup script for Debian-based Linux distributi
 - Custom Neovim configuration from personal dotfiles
 - Google's Python style guide (.pylintrc)
 - Custom clang-format configuration (.clang-format)
+- GEF (GDB Enhanced Features) for improved debugging
 - zsh-autosuggestions plugin
 - Useful shell aliases (eza shortcuts, clang-18 defaults)
 - Docker group membership for non-root docker usage
@@ -61,7 +62,7 @@ sudo ./armory.sh
 
 Or download and run in one command (only if you trust the source):
 ```bash
-wget -O - https://raw.githubusercontent.com/f0ur3y3s/armory/main/armory.sh | sudo bash
+wget -qO - https://raw.githubusercontent.com/f0ur3y3s/armory/main/armory.sh | sudo bash
 ```
 **Warning**: The one-liner above executes the script without review. Use at your own risk.
 
@@ -110,6 +111,7 @@ The script pulls custom configurations from:
 - Zsh theme: `https://github.com/f0ur3y3s/dotfiles`
 - Clang-format: `https://github.com/f0ur3y3s/clang-barrc/blob/main/.clang-format`
 - Pylintrc: `https://google.github.io/styleguide/pylintrc`
+- GEF: `https://gef.blah.cat/py`
 
 Fork and modify these URLs in `armory.sh` to use your own configurations.
 
@@ -117,5 +119,5 @@ Fork and modify these URLs in `armory.sh` to use your own configurations.
 
 - The script requires root privileges to install system packages
 - Estimated run time: 10-30 minutes depending on network speed and system
-- Creates `~/.oh-my-zsh`, `~/.config/nvim`, `~/.pylintrc`, `~/.clang-format`, and modifies `~/.zshrc`
+- Creates `~/.oh-my-zsh`, `~/.config/nvim`, `~/.pylintrc`, `~/.clang-format`, `~/.gdbinit-gef.py`, `~/.gdbinit`, and modifies `~/.zshrc`
 - Docker commands will work after logging out and back in (group membership)

@@ -57,11 +57,11 @@ PACKAGES=(
     # Network tools
     "socat" "ncat" "net-tools" "sshpass" "bind9-dnsutils"
     # Terminal utilities
-    "cowsay" "fortune-mod" "eza"
+    "cowsay" "fortune-mod" "eza" "glow"
     # Smart cat function prerequisites
     "vim-common" "jq" "bat"
 )
-# Note: neovim, btop, glow, and zsh-autosuggestions need special handling
+# Note: neovim, btop, and zsh-autosuggestions need special handling
 
 if command -v apt &>/dev/null; then
     PKG_MANAGER="apt"
@@ -224,6 +224,16 @@ if [[ ! -f "$ACTUAL_HOME/.clang-format" ]]; then
     echo -e " ${GREEN}✓ Done${NC}"
 fi
 
+# Install GEF (GDB Enhanced Features)
+if [[ ! -f "$ACTUAL_HOME/.gdbinit-gef.py" ]]; then
+    echo -ne "${BLUE}Installing GEF for GDB...${NC}"
+    sudo -u "$ACTUAL_USER" bash -c "curl -so $ACTUAL_HOME/.gdbinit-gef.py https://gef.blah.cat/py" >> "$LOG_FILE" 2>&1
+    if [[ ! -f "$ACTUAL_HOME/.gdbinit" ]] || ! grep -q "gdbinit-gef.py" "$ACTUAL_HOME/.gdbinit"; then
+        sudo -u "$ACTUAL_USER" bash -c "echo 'source ~/.gdbinit-gef.py' >> $ACTUAL_HOME/.gdbinit"
+    fi
+    echo -e " ${GREEN}✓ Done${NC}"
+fi
+
 # Install Node.js (often needed for Neovim plugins)
 if ! command -v node &>/dev/null; then
     echo -ne "${BLUE}Installing Node.js...${NC}"
@@ -275,22 +285,6 @@ if ! command -v btop &>/dev/null; then
             cd /
             rm -rf /tmp/btop*
         fi
-    fi
-    echo -e " ${GREEN}✓ Done${NC}"
-fi
-
-# Install glow (markdown viewer)
-if ! command -v glow &>/dev/null; then
-    echo -ne "${BLUE}Installing glow...${NC}"
-    GLOW_URL=$(curl -s https://api.github.com/repos/charmbracelet/glow/releases/latest | grep -o 'https://.*glow.*linux.*x86_64.*tar\.gz' | grep -v 'sbom' | head -1)
-    if [[ -n "$GLOW_URL" ]]; then
-        cd /tmp
-        curl -L "$GLOW_URL" -o glow.tar.gz 2>> "$LOG_FILE"
-        tar -xzf glow.tar.gz >> "$LOG_FILE" 2>&1
-        cp glow /usr/local/bin/
-        chmod +x /usr/local/bin/glow
-        rm -f glow.tar.gz glow LICENSE README.md completions
-        cd /
     fi
     echo -e " ${GREEN}✓ Done${NC}"
 fi
