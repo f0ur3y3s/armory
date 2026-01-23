@@ -23,7 +23,7 @@ Automated development environment setup script for Debian-based Linux distributi
 - **Node.js**: LTS version
 - **Rust**: Latest stable via rustup
 - **Python**: Latest available Python 3.x with pip and venv
-- **Docker**: docker.io, docker-compose, containerd
+- **Docker**: docker.io, Docker Compose v2 (plugin), containerd
 
 ### Network & Utilities
 - socat, ncat, net-tools, sshpass, bind9-dnsutils

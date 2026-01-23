@@ -18,15 +18,15 @@ PACKAGES=(
     # C/C++ analysis tools
     "cppcheck" "cpplint"
     # Docker
-    "docker.io" "docker-compose" "containerd"
+    "docker.io" "containerd"
     # Network tools
     "socat" "ncat" "net-tools" "sshpass" "bind9-dnsutils"
     # Terminal utilities
-    "cowsay" "fortune-mod"
+    "cowsay" "fortune-mod" "eza"
     # Smart cat function prerequisites
     "vim-common" "jq" "bat"
 )
-# Note: neovim, btop, eza, glow, and zsh-autosuggestions need special handling
+# Note: neovim, btop, glow, and zsh-autosuggestions need special handling
 
 if command -v apt &>/dev/null; then
     PKG_MANAGER="apt"
@@ -196,6 +196,19 @@ if command -v docker &>/dev/null; then
     else
         echo "User $ACTUAL_USER is already in docker group."
     fi
+
+    # Install Docker Compose v2 plugin
+    if ! docker compose version &>/dev/null; then
+        echo "Installing Docker Compose v2 plugin..."
+        DOCKER_CONFIG=${DOCKER_CONFIG:-/usr/local/lib/docker}
+        mkdir -p $DOCKER_CONFIG/cli-plugins
+        COMPOSE_VERSION=$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep '"tag_name"' | sed -E 's/.*"v([^"]+)".*/\1/')
+        curl -SL "https://github.com/docker/compose/releases/download/v${COMPOSE_VERSION}/docker-compose-linux-x86_64" -o $DOCKER_CONFIG/cli-plugins/docker-compose
+        chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
+        echo "Installed Docker Compose v${COMPOSE_VERSION}"
+    else
+        echo "Docker Compose v2 is already installed. Skipping."
+    fi
 fi
 
 # Install packages that aren't available in standard repos via alternative methods
@@ -220,24 +233,6 @@ if ! command -v btop &>/dev/null; then
     fi
 else
     echo "btop is already installed. Skipping."
-fi
-
-# Install eza (modern ls replacement)
-if ! command -v eza &>/dev/null; then
-    echo "Installing eza..."
-    # eza is not in Debian repos, install from GitHub
-    EZA_URL=$(curl -s https://api.github.com/repos/eza-community/eza/releases/latest | grep -o 'https://.*eza.*linux.*x86_64.*tar\.gz' | head -1)
-    if [[ -n "$EZA_URL" ]]; then
-        cd /tmp
-        curl -L "$EZA_URL" -o eza.tar.gz
-        tar -xzf eza.tar.gz
-        cp eza /usr/local/bin/
-        chmod +x /usr/local/bin/eza
-        rm -f eza.tar.gz eza
-        cd /
-    fi
-else
-    echo "eza is already installed. Skipping."
 fi
 
 # Install glow (markdown viewer)
