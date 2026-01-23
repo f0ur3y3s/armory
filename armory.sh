@@ -168,6 +168,22 @@ else
     echo "Neovim config directory already exists. Skipping."
 fi
 
+# Download Google's pylintrc
+if [[ ! -f "$ACTUAL_HOME/.pylintrc" ]]; then
+    echo "Downloading Google's pylintrc..."
+    sudo -u "$ACTUAL_USER" curl -o "$ACTUAL_HOME/.pylintrc" "https://google.github.io/styleguide/pylintrc"
+else
+    echo ".pylintrc already exists. Skipping."
+fi
+
+# Download custom .clang-format
+if [[ ! -f "$ACTUAL_HOME/.clang-format" ]]; then
+    echo "Downloading custom .clang-format..."
+    sudo -u "$ACTUAL_USER" curl -o "$ACTUAL_HOME/.clang-format" "https://raw.githubusercontent.com/f0ur3y3s/clang-barrc/main/.clang-format"
+else
+    echo ".clang-format already exists. Skipping."
+fi
+
 # Install Node.js (often needed for Neovim plugins)
 if ! command -v node &>/dev/null; then
     echo "Installing Node.js..."

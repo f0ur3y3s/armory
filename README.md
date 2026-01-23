@@ -32,6 +32,8 @@ Automated development environment setup script for Debian-based Linux distributi
 
 ### Configurations
 - Custom Neovim configuration from personal dotfiles
+- Google's Python style guide (.pylintrc)
+- Custom clang-format configuration (.clang-format)
 - zsh-autosuggestions plugin
 - Useful shell aliases (eza shortcuts, clang-18 defaults)
 - Docker group membership for non-root docker usage
@@ -106,6 +108,8 @@ The script will:
 The script pulls custom configurations from:
 - Neovim config: `https://github.com/f0ur3y3s/nvim.git`
 - Zsh theme: `https://github.com/f0ur3y3s/dotfiles`
+- Clang-format: `https://github.com/f0ur3y3s/clang-barrc/blob/main/.clang-format`
+- Pylintrc: `https://google.github.io/styleguide/pylintrc`
 
 Fork and modify these URLs in `armory.sh` to use your own configurations.
 
@@ -113,5 +117,5 @@ Fork and modify these URLs in `armory.sh` to use your own configurations.
 
 - The script requires root privileges to install system packages
 - Estimated run time: 10-30 minutes depending on network speed and system
-- Creates `~/.oh-my-zsh`, `~/.config/nvim`, and modifies `~/.zshrc`
+- Creates `~/.oh-my-zsh`, `~/.config/nvim`, `~/.pylintrc`, `~/.clang-format`, and modifies `~/.zshrc`
 - Docker commands will work after logging out and back in (group membership)
